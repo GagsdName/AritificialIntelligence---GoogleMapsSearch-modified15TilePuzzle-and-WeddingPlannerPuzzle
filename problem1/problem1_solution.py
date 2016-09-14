@@ -1,34 +1,38 @@
 #library for parsing command line arguments
 import argparse
-city_gps=[]
-road_segments=[]
+city_gps={}
+road_segments={}
 
 #function to suggest good driving directions 
 def get_driving_directions(startCity,endCity,routingOption,routingAlgorithm):
+	#If routing algorithm is astar
 	if "astar" in routingAlgorithm:
 		if "distance" in routingOption:
-			print "hai"
+			print "astar"
+			
+				
 
 			
 def get_successor(city):
-	successor = []
-	return successor
+	return None
 	
 def readFiles():
-	city_gps_entry =[]
-	road_segments_entry=[]
-	
 	# Parsing the file - 
 	with open('city-gps.txt') as fin:
 		for line in fin:
-			city_gps.append(line.split())
+			lineSplit = line.split()
+			city_gps.update({lineSplit[0]:lineSplit[0], lineSplit[0]+"(latitude)": lineSplit[1], lineSplit[0]+"(longitude)": lineSplit[2]})
 			
 	# Parsing the file - 
 	with open('road-segments.txt') as fin:
 		for line in fin:
-			road_segments.append(line.split())
-
-	#print road_segments
+			lineSplit = line.split()
+			if len(lineSplit) == 5:
+				road_segments.update({lineSplit[0]+"(source)":lineSplit[0], lineSplit[0]+"(destination)": lineSplit[1],\
+				lineSplit[0]+"(length)": lineSplit[2], lineSplit[0]+"(speed-limit)": lineSplit[3], lineSplit[0]+"(highway)": lineSplit[4]})
+			''' TO-DO: handle else case '''
+			
+	#print city_gps
 	
 readFiles()
 #parsing command line arguments
