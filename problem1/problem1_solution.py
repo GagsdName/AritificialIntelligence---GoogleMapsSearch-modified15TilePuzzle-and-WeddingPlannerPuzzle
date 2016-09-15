@@ -7,7 +7,9 @@ road_segments={}
 
 
 def is_goal(s, endCityName):
-	key, value = s.popitem()
+	keys = list(s.keys())
+	key = keys[0]
+	#print "\nis goal key", key
 	keySplitList = key.split('|')
 	if keySplitList[1] == endCityName:
 		return True
@@ -17,14 +19,17 @@ def is_goal(s, endCityName):
 
 def successors(dict):
 	ret=[]
+	print dict
 	key, value = dict.popitem()
 	keySplitList = key.split('|')
 	
+	#print "keySplit",keySplitList[1]
 	for key, value in road_segments.iteritems():   # iter on both keys and values
 		if key.startswith(keySplitList[1]):
+			#print "\nkey:value", key,value
 			ret.append({key:value})
 		
-	
+	print "\nret", ret
 	return ret
 
 
@@ -35,7 +40,7 @@ def bfs(startCity,endCity):
 	fringe = []
 	startCityName = str(startCity).strip('[]')
 	endCityName = str(endCity).strip('[]')
-	#print startCityName
+	print startCityName
 	
 	for key, value in road_segments.iteritems():   # iter on both keys and values
 		if key.startswith(startCityName):
@@ -43,10 +48,15 @@ def bfs(startCity,endCity):
 	
 	#print fringe
 	while len(fringe) > 0:
+		print "\ninitial fringe\t", fringe
    		for s in successors( fringe.pop(0)):
+			print "\n\n\nfringe after pop", fringe
+			print "state", s
 			if is_goal(s,endCityName):
-				print s
+				print "goal", s
+				return
 			if s not in fringe:
+				print "nahi"
 				fringe.append(s)
 				
 	return False
@@ -54,6 +64,7 @@ def bfs(startCity,endCity):
 	
 #function to suggest good driving directions 
 def get_driving_directions(startCity,endCity,routingOption,routingAlgorithm):
+	
 	
 	#If routing algorithm is astar
 	if "bfs" in routingAlgorithm:
@@ -101,7 +112,7 @@ cl_parser.add_argument("endCity", help="Enter the Ending Point of your journey")
 cl_parser.add_argument("routingOption", help="Enter the Routing Option - One of Segments, Distance, Time or Scenic ")
 cl_parser.add_argument("routingAlgorithm", help="Enter the Routing Algorithm - One of bfs, dfs, iterative deepening or astar")
 cl_args = cl_parser.parse_args() 
-
+print cl_args.startCity
 get_driving_directions(cl_args.startCity, cl_args.endCity, cl_args.routingOption, cl_args.routingAlgorithm)
 
 
