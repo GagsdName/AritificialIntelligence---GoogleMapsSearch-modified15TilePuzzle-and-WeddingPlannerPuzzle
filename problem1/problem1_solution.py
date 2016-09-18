@@ -5,14 +5,17 @@ import sys
 city_gps={}
 road_segments={}
 
-
+def key_split(key):
+	keySplitList = key.split('|')
+	return keySplitList
+	
 def is_goal(s, endCityName):
 	keys = list(s.keys())
 	key = keys[0]
 	#print   "\nis goal key", key
 	keySplitList = key.split('|')
 	if keySplitList[1] == endCityName:
-		s[key]["pathToNode"].append([endCityName])
+		s[key]["pathToNode"] = s[key]["pathToNode"] + "|"+endCityName
 		return True
 	
 	return False
@@ -29,24 +32,27 @@ def successors(dict):
 	
 	parent_item = {parent_key: parent_value}
 	#print "parent_item", parent_item
-	parent_path = parent_item[parent_key]["pathToNode"]
+	parent_path= parent_item[parent_key]["pathToNode"]
 	#print "parent_path", parent_path
 	parentKeySplitList = parent_key.split('|')
 	#print "parentKeySplt", parentKeySplitList
-	
 	#print   "keySplit",keySplitList[1]
+	pathList = parent_path.split('|')
+	#print "\npathList",pathList
 	for child_key, child_value in road_segments.iteritems():   # iter on both keys and values
-		if child_key.startswith(parentKeySplitList[1]):
+		childKeySplitList = key_split(child_key)
+		if childKeySplitList[0] == parentKeySplitList[1] and childKeySplitList[1] not in pathList:
+			
 			child_item = {child_key:child_value}
-			childKeySplitList = child_key.split('|')
-			child_item[child_key]["pathToNode"].append(parent_path+[childKeySplitList[0]])
+			#print "\nchild",child_item
+			child_item[child_key]["pathToNode"] = parent_path+ "|"+childKeySplitList[1]
 			#print "haha:",parent_key, "child_key", child_key
 			child_item[child_key]["costToNode"] = float(dict[parent_key]["costToNode"]) +  float(child_item[child_key][routeOptionString])	
 			
 			#print   "\nkey:value", key,value
 			ret.append({child_key:child_value})
 		
-	#print  "\nret", ret
+	#rint  "\nret", ret
 	return ret
 
 
@@ -63,16 +69,18 @@ def bfs():
 	#print  startCityName
 	
 	for key, value in road_segments.iteritems():   # iter on both keys and values
+		key_tokens = key_split(key)
 		#print key
-		if key.startswith(startCityName):
+		if key_tokens[0] == startCityName:
 			item  = {key:value}
-			#print item
-			keySplitList = key.split('|')
-			item[key]["pathToNode"].append(startCityName)
+			item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
+			item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
+			#item[key]["pathToNode"].append(startCityName)
 			item[key]["costToNode"] = item[key][routeOptionString]	
 			#print "String",routeOptionString, "key",key
 			#print "distance of bappa ",item[key]["costToNode"]
 			fringe.append(item)
+			
 			
 	
 			
@@ -85,6 +93,7 @@ def bfs():
 			#print  "\n\n\nfringe after pop", fringe
 			#print  "state", s
 			if is_goal(s,endCityName):
+				print "goal", s
 				keys = list(s.keys())
 				s_key = keys[0]
 				float_val = float(s[s_key]["costToNode"])
@@ -98,6 +107,7 @@ def bfs():
 			if s not in fringe:
 				#print  "nahi"
 				fringe.append(s)
+				
 				
 	
 	return False
@@ -144,7 +154,10 @@ def readFiles():
 			if len(lineSplit) == 5 and int(lineSplit[2]) and int(lineSplit[3]):
 				#print   "distance",lineSplit[2],"speed",lineSplit[3]
 				road_segments.update({lineSplit[0]+"|"+lineSplit[1]+"|"+lineSplit[4]:{"distance": lineSplit[2], "speed": lineSplit[3],\
-					"isHighway":1 if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":[], "costToNode":0}}); 
+					"isHighway":1 if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0}}); 
+				road_segments.update({lineSplit[1]+"|"+lineSplit[0]+"|"+lineSplit[4]:{"distance": lineSplit[2], "speed": lineSplit[3],\
+					"isHighway":1 if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0}}); 
+				#print road_segments
 			''' TO-DO: handle else case '''
 			
 	#print   road_segments
