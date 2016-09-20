@@ -17,6 +17,24 @@ def print_state(state):
 			print str(n).rjust(2),
 		print
 
+#heuristic function, uses manhattan distance
+#calculates the manhattan distance between a given n and its goal-state position
+def heuristic(state, n):
+	zposg, zposc = 0, 0
+	#find n in current state
+	for i,row in enumerate(state):
+		for j,no in enumerate(row):
+			if no == n:
+				zposc = i,j
+	
+	#find n in goal state
+	for i,row in enumerate(goal_state):
+		for j,no in enumerate(row):
+			if no == n:
+				zposg = i,j
+	
+	return (abs(zposc[0] - zposg[0]) + abs(zposc[1] - zposg[1])), zposc, zposg
+
 #recursively count the number of inversions in a list
 def count_inversions(l):
 	global count
@@ -66,10 +84,12 @@ def inversions(state):
 			l.append(n)
 	count_inversions(l)
 	# subtract the inversion from zero count from total
-	print count - (zpos[0]*4 + zpos[1])
+	return (count - (zpos[0]*4 + zpos[1]))
 	count = 0
 
 #solve 15 puzzle problem
-inversions(state)
-inversions(goal_state)
-
+print inversions(state)
+for row in state:
+	for n in row:
+		print heuristic(state, n)
+print inversions(goal_state)
