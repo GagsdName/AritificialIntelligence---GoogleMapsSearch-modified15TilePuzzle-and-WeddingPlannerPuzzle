@@ -1,78 +1,75 @@
-#parsing input
-#no input checking done yet!
-import sys, getopt
-friends = []
-guests = set()
+# https://pythonandr.com/2015/07/20/number-of-inversions-in-an-unsorted-array-python-code/
+import sys
+
+state = []
+goal_state = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,0]]
+count = 0
 input_file = open(sys.argv[1],'r')
-seats_per_table = int(sys.argv[2])
 for line in input_file:
-	friend_list = line.split(' ')
-	friend_list = map(lambda s: s.strip(), friend_list)
-	guest = friend_list.pop(0)
-	guests.add(guest)
-	for f in friend_list:
-		friends.append((guest,f))
-		guests.add(f)
-#print seats_per_table
-#print friends
-#print guests
+	row = line.split(' ')
+	row = map(lambda s:s.strip(), row)
+	state.append([int(i) for i in row])
 
-#return a set of people unknown to a particular guest
-def get_unknown(guest):
-	ug = set(guests)
-	for guest1,guest2 in friends:
-		if guest in (guest1,guest2):
-			ug.discard(guest1)
-			ug.discard(guest2)
-	return ug
+#print state in a human readable format
+def print_state(state):
+	for row in state:
+		for n in row:
+			print str(n).rjust(2),
+		print
 
-#returns true if the guest can be added to the table
-def addable_guest(table,guest):
-	if guest in sel_guests:
-		#print guest, " may not be added into ",table
-		return False
-	elif len(table) == 0:
-		#print guest, " may be added into ",table
-		return True
-	else:
-		aml = unknown_to_guest[table[0]]
-		for member in table:
-			aml &= unknown_to_guest[member]
-		if guest in aml:
-			#print guest, " may be added into ",table
-			return True
-		else:
-			#print guest, " may not be added into ",table
-			return False
+#recursively count the number of inversions in a list
+def count_inversions(l):
+	global count
+	midsection = len(l)/2
+	leftArray = l[:midsection]
+	rightArray = l[midsection:]
+	if len(l) > 1:
+		count_inversions(leftArray)
+		count_inversions(rightArray)
+		i, j = 0, 0
+		a = leftArray; b = rightArray
+		for k in range(len(a) + len(b) + 1):
+			if a[i] <= b[j]:
+				l[k] = a[i]
+				i += 1
+				if i == len(a) and j != len(b):
+					while j != len(b):
+						k +=1
+						l[k] = b[j]
+						j += 1
+					break
+			elif a[i] > b[j]:
+				l[k] = b[j]
+				count += (len(a) - i)
+				j += 1
+				if j == len(b) and i != len(a):
+					while i != len(a):
+						k+= 1
+						l[k] = a[i]
+						i += 1
+					break
+	return l
 
-#total number of guests
-no_of_guests = len(guests)
-#dict contains a guest name and a set of people unknown to guest
-unknown_to_guest = { guest: get_unknown(guest) for guest in guests }
-#list of tuples containing guest name and the number of people unknown to guest
-guest_priority = [ (len(unknown_to_guest[guest]),guest) for guest in guests ]
-guest_priority.sort()
-#set containing arranged people
-sel_guests = set()
-#list containing arrangement of tables
-tables = []
+#count the number of inversions in the given state
+def inversions(state):
+	#find position of zero
+	global count
+	zpos = 0
+	for i,row in enumerate(state):
+		for j,n in enumerate(row):
+			if n == 0:
+				zpos = i,j
+	l = []
+	# count inversions normally
+	for row in state:
+		for n in row:
+			l.append(n)
+	count_inversions(l)
+	# subtract the inversion from zero count from total
+	print count - (zpos[0]*4 + zpos[1])
+	count = 0
 
-#print "Start arrangement"
-while len(tables) < no_of_guests:
-	table = []
-	if len(sel_guests) >= len(guests):
-		#print "Finished Arrangement"
-		break
-	for guest in guests:
-		if addable_guest(table,guest) and len(table) < seats_per_table and len(sel_guests) < len(guests):
-			table.append(guest)
-			sel_guests.add(guest)
-			#print guest, " added to ",table
-	tables.append(table)
+#solve 15 puzzle problem
+inversions(state)
+inversions(goal_state)
 
-#printing solution
-print len(tables),
-for table in tables:
-	for member in table:
-		print member + ',',
-	print ' ',
