@@ -1,5 +1,4 @@
 #parsing input
-#no input checking done yet!
 import sys, getopt
 friends = []
 guests = set()
@@ -13,9 +12,6 @@ for line in input_file:
 	for f in friend_list:
 		friends.append((guest,f))
 		guests.add(f)
-#print seats_per_table
-#print friends
-#print guests
 
 #return a set of people unknown to a particular guest
 def get_unknown(guest):
