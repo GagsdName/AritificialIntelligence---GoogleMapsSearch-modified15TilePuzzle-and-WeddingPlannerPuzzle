@@ -1,10 +1,48 @@
 #library for getting command line arguments
 import sys
-
+#from geopy.distance import vincenty
 
 city_gps={}
 road_segments={}
+'''
+def calc_heuristic(src, dest):
+	src1 = (src["latitude"], src["longitude"])
+	dest1 = (dest["latitude"], dest["longitude"])
+	return(vincenty(src1, dest1).miles)
 
+def astar():
+	fringe = []
+	global goal_cost
+    global goal_path
+    goal_path=""
+    goal_cost=9999999999
+    
+    for key, value in road_segments.iteritems():   # iter on both keys and values
+        key_tokens = key_split(key)
+        if key_tokens[0] == startCityName:
+            item  = {key:value}
+            item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
+            item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
+            item[key]["costToNode"] = item[key][routeOptionString]    
+            fringe.append(item)
+
+    while len(fringe) > 0:
+           for s in successors( fringe.pop(0)):
+            if is_goal(s,endCityName):
+                keys = list(s.keys())
+                s_key = keys[0]
+                float_val = float(s[s_key]["costToNode"])
+                if float_val < goal_cost:
+                    goal_cost = float(s[s_key]["costToNode"])
+                    goal_path = s[s_key]["pathToNode"]
+                    continue
+            
+            
+            if s not in fringe:
+                fringe.append(s)
+                
+	return None
+'''
 def key_split(key):
     keySplitList = key.split('|')
     return keySplitList
@@ -40,6 +78,44 @@ def successors(dict):
                 ret.append({child_key:child_value})
     return ret
 
+	
+def dfs():
+    
+    fringe = []
+    global goal_cost
+    global goal_path
+    goal_path=""
+    goal_cost=9999999999
+    
+    for key, value in road_segments.iteritems():   # iter on both keys and values
+        key_tokens = key_split(key)
+        if key_tokens[0] == startCityName:
+            item  = {key:value}
+            item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
+            item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
+            item[key]["costToNode"] = item[key][routeOptionString]    
+            fringe.append(item)
+    #count=0
+    while len(fringe)>0:
+       # pop_item=fringe.pop(count)
+        for s in successors(fringe.pop()):
+            #scount=successors(pop_item)
+            #count=count+len(scount)
+            if is_goal(s,endCityName):
+                #print "goal",s
+                keys = list(s.keys())
+                s_key = keys[0]
+                float_val = float(s[s_key]["costToNode"])
+                if float_val < goal_cost:
+                    goal_cost = float(s[s_key]["costToNode"])
+                    goal_path = s[s_key]["pathToNode"]
+                    continue
+            if s not in fringe:
+                fringe.append(s)
+           
+                
+    return False
+	
 def bfs():
     
     fringe = []
@@ -84,6 +160,12 @@ def get_driving_directions(startCity,endCity,routingOption,routingAlgorithm):
     routeOptionString = str(routingOption).strip('[]')
     if "bfs" in routingAlgorithm:
             bfs()
+    if "dfs" in routingAlgorithm:
+            dfs()
+    if "ids" in routingAlgorithm:
+             ids()
+#     if "astar" in routingAlgorithm:
+#             astar()
             
 def get_successor(city):
     return None
@@ -93,7 +175,8 @@ def readFiles():
     with open('city-gps.txt') as fin:
         for line in fin:
             lineSplit = line.split()
-            city_gps.update({lineSplit[0]:lineSplit[0], lineSplit[0]+"(latitude)": lineSplit[1], lineSplit[0]+"(longitude)": lineSplit[2]})
+            city_gps.update({lineSplit[0]:{"latitude": lineSplit[1], "longitude": lineSplit[2]}})
+	#print city_gps
             
     # Parsing the file - 
     with open('road-segments.txt') as fin:
