@@ -9,6 +9,36 @@ for line in input_file:
 	row = line.split(' ')
 	row = map(lambda s:s.strip(), row)
 	state.append([int(i) for i in row])
+	
+#print puzzle board	
+def print_state1(state):
+    for row in state:
+        print row,"\n"
+        
+#swap empty tile with given tile        
+def swap(state,row,col,nrow,ncol):
+    temp=state[row][col]
+    state[row][col]=state[nrow][ncol]
+    state[nrow][ncol]=temp
+    return state
+    
+#generate successors of the given state
+def successors(state):
+    suc=[]
+    for row in range(0,4):
+        for col in range(0,4):
+            if int(state[row][col])==0:
+                emp_row=row
+                emp_col=col
+    left_succ=swap(state,emp_row,emp_col,emp_row,emp_col-1 if emp_col else 3)
+    right_succ=swap(state,emp_row,emp_col,emp_row,emp_col+1 if emp_col<3 else 0)
+    up_succ=swap(state,emp_row,emp_col,emp_row-1 if emp_row else 3,emp_col)
+    down_succ=swap(state,emp_row,emp_col,emp_row+1 if emp_col<3 else 0,emp_col)
+    suc.append(left_succ)
+    suc.append(right_succ)
+    uc.append(up_succ)
+    suc.append(down_succ)
+    return suc	
 
 #print state in a human readable format
 def print_state(state):
