@@ -1,28 +1,26 @@
 # https://pythonandr.com/2015/07/20/number-of-inversions-in-an-unsorted-array-python-code/
 import sys
 import heapq
+import copy
 
-state = [[15,2,3,4],[5,6,7,8],[12,10,11,9],[13,14,1,0]]
+state = [] #[[15,2,3,4],[5,6,7,8],[12,10,11,9],[13,14,1,0]]
 goal_state = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,0]]
 count = 0
 pq = []
-#input_file = open(sys.argv[1],'r')
-#for line in input_file:
-#	row = line.split(' ')
-#	row = map(lambda s:s.strip(), row)
-#	state.append([int(i) for i in row])
+input_file = open(sys.argv[1],'r')
+for line in input_file:
+	row = line.split(' ')
+	row = map(lambda s:s.strip(), row)
+	state.append([int(i) for i in row])
 	
-
-        
 #swap empty tile with given tile        
 def swap(state,row,col,nrow,ncol):
     temp_state=copy.deepcopy(state)
-    print temp_state
     temp=temp_state[row][col]
     temp_state[row][col]=temp_state[nrow][ncol]
     temp_state[nrow][ncol]=temp
     return temp_state
-    
+
 #generate successors of the given state
 def successors(state):
     suc=[]
@@ -35,12 +33,11 @@ def successors(state):
     left_succ=swap(state,emp_row,emp_col,emp_row,emp_col+1 if emp_col<3 else 0)
     down_succ=swap(state,emp_row,emp_col,emp_row-1 if emp_row else 3,emp_col)
     up_succ=swap(state,emp_row,emp_col,emp_row+1 if emp_row<3 else 0,emp_col)
-    suc.append(right_succ)
-    suc.append(left_succ)
-    suc.append(down_succ)
-    suc.append(up_succ)
+    suc.append((right_succ,"R "))
+    suc.append((left_succ,"L "))
+    suc.append((down_succ,"D "))
+    suc.append((up_succ,"U "))
     return suc
-    
 
 #print state in a human readable format
 def print_state(state):
@@ -64,14 +61,14 @@ def heuristic_n(state, n):
 		for j,no in enumerate(row):
 			if no == n:
 				zposg = i,j
-	
-	return (abs(zposc[0] - zposg[0]) + abs(zposc[1] - zposg[1])), zposc, zposg
+	#print n, abs(zposc[0] - zposg[0]) + abs(zposc[1] - zposg[1])
+	return (abs(zposc[0] - zposg[0]) + abs(zposc[1] - zposg[1]))
 
 #calculates the manhattan distance between a given state and goal
 def heuristic(state):
         cost = 0
-        for i in range(0,16):
-            cost += heuristic_n(state,n)
+        for i in range(1,16):
+            cost += heuristic_n(state,i)
         return cost
 
 #recursively count the number of inversions in a list
@@ -123,25 +120,40 @@ def inversions(state):
 			l.append(n)
 	count_inversions(l)
 	# subtract the inversion from zero count from total
-	return (count - (zpos[0]*4 + zpos[1]))
+	temp_count = (count - (zpos[0]*4 + zpos[1]))
 	count = 0
+	return temp_count
 
-
+def is_goal_state(state):
+	for i,row in enumerate(state):
+		for j,n in enumerate(row):
+			if not n == goal_state[i][j]:
+				return False
+	return True
 
 #a-star search algorithm
 def a_star(state):
     state_tuple = (0,0,state,"")
     heapq.heappush(pq,state_tuple)
-    while not pq.empty():
-        cost, state, path = heapq.heappop(pq)
-        for s in successors(state):
-            heapq.heappush(pq,(1+state))
-    
+    while len(pq)>0:
+        total_cost, path_cost, state, path = heapq.heappop(pq)
+        if is_goal_state(state):
+        	print "goal achieved"
+        	print_state(state)
+        	return path
+        for s,m in successors(state):
+        	print_state(s)
+        	print
+        	succ_tuple = (path_cost + 1 + heuristic(s), path_cost + 1, s, path + m)
+        	heapq.heappush(pq,succ_tuple)
 
 #solve 15 puzzle problem
-print inversions(state)
-#for row in state:
-#	for n in row:
-#		print heuristic(state, n)
-heuristic(state)
-print inversions(goal_state)
+#print inversions(state), inversions(state), inversions(goal_state)
+if inversions(state)%2!=inversions(goal_state)%2:
+	print "goal not reachable"
+	sys.exit()
+print_state(state)
+#for s,m in successors(state):
+#	print_state(s)
+#	print "heuristic:", heuristic(s), "move:", m
+print a_star(state)
