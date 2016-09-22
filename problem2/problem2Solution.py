@@ -32,7 +32,7 @@ def successors(state):
                 emp_col=col
     suc.append(swap(state,emp_row,emp_col,emp_row,emp_col-1 if emp_col else 3))
     suc.append(swap(state,emp_row,emp_col,emp_row,emp_col+1 if emp_col<3 else 0))
-    uc.append(swap(state,emp_row,emp_col,emp_row-1 if emp_row else 3,emp_col))
+    suc.append(swap(state,emp_row,emp_col,emp_row-1 if emp_row else 3,emp_col))
     suc.append(swap(state,emp_row,emp_col,emp_row+1 if emp_col<3 else 0,emp_col))
     return suc	
 
