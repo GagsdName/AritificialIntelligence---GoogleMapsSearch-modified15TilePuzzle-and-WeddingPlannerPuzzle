@@ -1,14 +1,16 @@
 # https://pythonandr.com/2015/07/20/number-of-inversions-in-an-unsorted-array-python-code/
 import sys
+import heapq
 
-state = []
+state = [[15,2,3,4],[5,6,7,8],[12,10,11,9],[13,14,1,0]]
 goal_state = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,0]]
 count = 0
-input_file = open(sys.argv[1],'r')
-for line in input_file:
-	row = line.split(' ')
-	row = map(lambda s:s.strip(), row)
-	state.append([int(i) for i in row])
+pq = []
+#input_file = open(sys.argv[1],'r')
+#for line in input_file:
+#	row = line.split(' ')
+#	row = map(lambda s:s.strip(), row)
+#	state.append([int(i) for i in row])
 	
 #print puzzle board	
 def print_state1(state):
@@ -44,8 +46,8 @@ def print_state(state):
 		print
 
 #heuristic function, uses manhattan distance
-#calculates the manhattan distance between a given n and its goal-state position
-def heuristic(state, n):
+#calculates the manhattan distance between a given tile number n and its position in the goal-state
+def heuristic_n(state, n):
 	zposg, zposc = 0, 0
 	#find n in current state
 	for i,row in enumerate(state):
@@ -60,6 +62,13 @@ def heuristic(state, n):
 				zposg = i,j
 	
 	return (abs(zposc[0] - zposg[0]) + abs(zposc[1] - zposg[1])), zposc, zposg
+
+#calculates the manhattan distance between a given state and goal
+def heuristic(state):
+        cost = 0
+        for i in range(0,16):
+            cost += heuristic_n(state,n)
+        return cost
 
 #recursively count the number of inversions in a list
 def count_inversions(l):
@@ -113,9 +122,22 @@ def inversions(state):
 	return (count - (zpos[0]*4 + zpos[1]))
 	count = 0
 
+
+
+#a-star search algorithm
+def a_star(state):
+    state_tuple = (0,0,state,"")
+    heapq.heappush(pq,state_tuple)
+    while not pq.empty():
+        cost, state, path = heapq.heappop(pq)
+        for s in successors(state):
+            heapq.heappush(pq,(1+state))
+    
+
 #solve 15 puzzle problem
 print inversions(state)
-for row in state:
-	for n in row:
-		print heuristic(state, n)
+#for row in state:
+#	for n in row:
+#		print heuristic(state, n)
+heuristic(state)
 print inversions(goal_state)
