@@ -136,12 +136,17 @@ def is_goal_state(state):
 
 #a-star search algorithm
 def a_star(state):
+	visited_states = {}
 	state_tuple = (0, 0, state, "")
 	heapq.heappush(pq, state_tuple)
 	while len(pq) > 0:
 		total_cost, path_cost, state, path = heapq.heappop(pq)
 		if is_goal_state(state):
 			return path
+		if str(state) in visited_states:
+			continue
+		else:
+			visited_states.update({str(state):0})
 		for s,m in successors(state):
 			succ_tuple = (path_cost + 1 + heuristic(s), path_cost + 1, s, path + m)
 			heapq.heappush(pq,succ_tuple)
