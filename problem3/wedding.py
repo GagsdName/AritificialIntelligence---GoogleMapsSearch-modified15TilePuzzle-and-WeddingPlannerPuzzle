@@ -1,19 +1,7 @@
-#parsing input
-import sys
-
-#list of tuples containing set of friendships
+#code after parsing
+import sys, getopt
 friends = []
-#set containing all the guests present
 guests = set()
-#total number of guests
-no_of_guests = len(guests)
-#dictionary contains a guest name and a set of people unknown to guest
-unknown_to_guest = { guest: get_unknown(guest) for guest in guests }
-#set containing arranged people
-sel_guests = set()
-#list containing arrangement of tables
-tables = []
-
 input_file = open(sys.argv[1],'r')
 seats_per_table = int(sys.argv[2])
 for line in input_file:
@@ -34,33 +22,47 @@ def get_unknown(guest):
 			ug.discard(guest2)
 	return ug
 
-#returns true if the guest can be added to the table
 def addable_guest(table,guest):
 	if guest in sel_guests:
+		#print guest, " may not be added into ",table
 		return False
 	elif len(table) == 0:
+		#print guest, " may be added into ",table
 		return True
 	else:
 		aml = unknown_to_guest[table[0]]
 		for member in table:
 			aml &= unknown_to_guest[member]
 		if guest in aml:
+			#print guest, " may be added into ",table
 			return True
 		else:
+			#print guest, " may not be added into ",table
 			return False
+
+no_of_guests = len(guests)
+#dict contains a guest name and a set of people unknown to guest
+unknown_to_guest = { guest: get_unknown(guest) for guest in guests }
+#list of tuples containing guest name and the number of people unknown to guest
+guest_priority = [ (len(unknown_to_guest[guest]),guest) for guest in guests ]
+guest_priority.sort()
+#set containing arranged people
+sel_guests = set()
+#list containing arrangement of tables
+tables = []
 
 #print "Start arrangement"
 while len(tables) < no_of_guests:
 	table = []
 	if len(sel_guests) >= len(guests):
+		#print "Finished Arrangement"
 		break
 	for guest in guests:
 		if addable_guest(table,guest) and len(table) < seats_per_table and len(sel_guests) < len(guests):
 			table.append(guest)
 			sel_guests.add(guest)
+			#print guest, " added to ",table
 	tables.append(table)
-
-#print solution
 print len(tables),
 for table in tables:
 	for member in table:
