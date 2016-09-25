@@ -1,7 +1,9 @@
-#code after parsing
-import sys, getopt
+import sys
+#bi-directional friendship tuples
 friends = []
+#set containing all the guests
 guests = set()
+#reading data from file
 input_file = open(sys.argv[1],'r')
 seats_per_table = int(sys.argv[2])
 for line in input_file:
@@ -22,49 +24,49 @@ def get_unknown(guest):
 			ug.discard(guest2)
 	return ug
 
+#check if the guest can be added to the table
 def addable_guest(table,guest):
+	#guest already present
 	if guest in sel_guests:
-		#print guest, " may not be added into ",table
 		return False
+	#empty table
 	elif len(table) == 0:
-		#print guest, " may be added into ",table
 		return True
+	#add a guest who dosent know anyone already present on the table
 	else:
 		aml = unknown_to_guest[table[0]]
 		for member in table:
 			aml &= unknown_to_guest[member]
 		if guest in aml:
-			#print guest, " may be added into ",table
 			return True
 		else:
-			#print guest, " may not be added into ",table
 			return False
 
+#total number of guests present
 no_of_guests = len(guests)
 #dict contains a guest name and a set of people unknown to guest
 unknown_to_guest = { guest: get_unknown(guest) for guest in guests }
-#list of tuples containing guest name and the number of people unknown to guest
-guest_priority = [ (len(unknown_to_guest[guest]),guest) for guest in guests ]
-guest_priority.sort()
 #set containing arranged people
 sel_guests = set()
 #list containing arrangement of tables
 tables = []
 
-#print "Start arrangement"
+#Arrangement of guests on tables
 while len(tables) < no_of_guests:
 	table = []
 	if len(sel_guests) >= len(guests):
-		#print "Finished Arrangement"
 		break
 	for guest in guests:
 		if addable_guest(table,guest) and len(table) < seats_per_table and len(sel_guests) < len(guests):
 			table.append(guest)
 			sel_guests.add(guest)
-			#print guest, " added to ",table
 	tables.append(table)
+#print arrangement of tables
 print len(tables),
 for table in tables:
-	for member in table:
-		print member + ',',
+	for i,member in enumerate(table):
+		if i == (len(table) - 1):
+			print member,
+		else:
+			print member + ',',
 	print ' ',
