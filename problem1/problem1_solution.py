@@ -15,7 +15,8 @@ goal_flag =0
 def find_neighbor_closest_to_goal(highwayIntersection, fromCity):
         
         min_heuristic = 9999999
-	min_neighbor = {}	
+	min_neighbor = {}
+	minKey=""	
     	for child_key, child_value in road_segments.iteritems():
 		childKeySplitList = key_split(child_key)
 		if childKeySplitList[0] == highwayIntersection and childKeySplitList[1] != fromCity :
@@ -26,10 +27,9 @@ def find_neighbor_closest_to_goal(highwayIntersection, fromCity):
 				if heuristic < min_heuristic:
 					min_heuristic = heuristic
 					min_neighbor = child_item
-					
-					
-	
-	return (min_heuristic, min_neighbor)
+					minKey = child_key
+        minKeySplitList = minKey.split("|")						
+	return (min_heuristic, min_neighbor, minKey, minKeySplitList[1])
 
 	
 def calc_heuristic(src, dest):
@@ -75,13 +75,18 @@ def astar():
                         item[key]["distToNode"] = float(item[key]["distance"])
                         g = calc_heuristic(key_tokens[1], endCityName)
 			if g != None:
-				f = item[key]["distToNode"]+g
+				f = float(item[key]["costToNode"])+g
                                 heapq.heappush(fringe, (f,item))
-			'''else:
-				highway_neighbor_tuple = find_neighbor_closest_to_goal(key_tokens[1], key_tokens[0])
+			else:
+				highway_neighbor_tuple = find_neighbor_closest_to_goal(key_tokens[1], key_tokens[0], )
 				print "\nhighway neighbor tuple entry",highway_neighbor_tuple[1]
 				if highway_neighbor_tuple != None:
-					heapq.heappush(fringe,highway_neighbor_tuple)'''
+					road_segments[highway_neighbor_tuple[2]]["pathToNode"] = item[key]["pathToNode"]+"|"+highway_neighbor_tuple[3]
+					road_segments[highway_neighbor_tuple[2]]["costToNode"] = float(item[key]["costToNode"])+float(highway_neighbor_tuple[0])
+					road_segments[highway_neighbor_tuple[2]]["distToNode"] = float(item[key]["distToNode"])+\
+						float( road_segments[highway_neighbor_tuple[2]]["distance"])
+					heapq.heappush(fringe,(road_segments[highway_neighbor_tuple[2]]["costToNode"], highway_neighbor_tuple[1]))
+					
 	
 	while len(fringe) > 0:
 		popped_item = heapq.heappop(fringe)[1]
@@ -173,7 +178,7 @@ def dfs():
     global goal_path
     global goal_time
     global goal_dist
-    
+    global goal_flag
     for key, value in road_segments.iteritems():   # iter on both keys and values
         key_tokens = key_split(key)
         if key_tokens[0] == startCityName:
@@ -185,6 +190,7 @@ def dfs():
             item[key]["distToNode"] = item[key]["distance"]
   
             fringe.append(item)
+	curr_depth=1
     #count=0
     while len(fringe)>0:
        # pop_item=fringe.pop(count)
@@ -201,11 +207,20 @@ def dfs():
 			goal_time = float(s[s_key]["timeToNode"])
 			goal_dist = float(s[s_key]["distToNode"])
                         continue
+		curr_depth+=1
             if s not in fringe:
                 fringe.append(s)
-           
+    goal_flag=1   
                 
     return False
+
+def idfs():
+    global goal_flag
+    depth=0
+    while(not goal_flag):
+        dfs(depth+1)
+    
+    
 	
 def bfs():
     
