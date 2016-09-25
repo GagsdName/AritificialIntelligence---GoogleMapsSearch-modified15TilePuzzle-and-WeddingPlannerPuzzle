@@ -3,9 +3,13 @@ import sys
 import heapq
 import copy
 
+#keeps track of the number of inversions
 count = 0
+#priority queue for a-star algorithm
 pq = []
+#input state board
 state = []
+#required goal state
 goal_state = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,0]]
 
 #parse input and store data
@@ -48,7 +52,6 @@ def print_state(state):
 			print str(n).rjust(2),
 		print
 
-#heuristic function, uses manhattan distance
 #calculates the manhattan distance between a given tile number n and its position in the goal-state
 def heuristic_n(state, n):
 	posg, posc = 0, 0
@@ -57,14 +60,11 @@ def heuristic_n(state, n):
 		for j,no in enumerate(row):
 			if no == n:
 				posc = i,j
-	
 	#find n in goal state
 	for i,row in enumerate(goal_state):
 		for j,no in enumerate(row):
 			if no == n:
 				posg = i,j
-
-	#print n, abs(zposc[0] - zposg[0]) + abs(zposc[1] - zposg[1])
 	return (abs(posc[0] - posg[0]) + abs(posc[1] - posg[1]))
 
 #calculates the manhattan distance between a given state and goal
@@ -122,11 +122,12 @@ def inversions(state):
 		for n in row:
 			l.append(n)
 	count_inversions(l)
-	# subtract the inversion from zero count from total
+	# subtract from total number of inversions the inversion from zero
 	temp_count = (count - (zpos[0]*4 + zpos[1]))
 	count = 0
 	return temp_count
 
+#checks if the given state is the goal state
 def is_goal_state(state):
 	for i,row in enumerate(state):
 		for j,n in enumerate(row):
