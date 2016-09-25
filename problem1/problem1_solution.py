@@ -11,6 +11,27 @@ goal_time = 0.0 #goal time initialized to 0
 goal_dist = 0.0 #goal  distance to initialized to 0 
 goal_flag =0 #goal flag initialized to 0 
 
+
+
+def print_solution():
+	goal_path_list = goal_path.split("|")
+	print "\n\n"
+	i = 1
+        for key, value in road_segments.iteritems():
+		if i  == len(goal_path_list)-1:
+                	break
+	
+		srcDestString = goal_path_list[i]+"|"+goal_path_list[i+1]
+		if key.startswith(srcDestString):
+			highway = key.split("|")[2]
+			print "From City = ",goal_path_list[i], ", To City = ",goal_path_list[i+1], "via ", highway, "\n"  
+			i+=1
+	print "\n[total-distance-in-miles:", goal_dist, "] [total-time-in-hours:", goal_time,"] ", goal_path
+	
+
+
+
+
 '''finding a neighbor closest to goal when the extracted node is a highway intersection and therefore no corresponding entry is found in the city_gps file
 The neighbor is chosen on the basis that it has the least value for the applied heuristic'''
 def find_neighbor_closest_to_goal(highwayIntersection, fromCity):
@@ -36,7 +57,7 @@ Function to calculate heuristic for any city. The straighline distance calculati
 '''
 def calc_heuristic(src, dest):
 	if src not in list(city_gps.keys()):
-		 print "\nNo entry in City_Gps file for\t", src, "\n"	
+		 #print "\nNo entry in City_Gps file for\t", src, "\n"	
 		 return None
 	#print "\nlatitude src = ", city_gps[src]["latitude"]
 	distance = 0
@@ -73,18 +94,21 @@ def astar():
 			item  = {key:value}
 			item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName #updating path of the node being explored
 			item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
-			item[key]["timeToNode"] = item[key]["travelTime"] #updating travel time of the node being explored
+			item[key]["timeToNode"] = item[key]["time"] #updating travel time of the node being explored
                         item[key]["distToNode"] = float(item[key]["distance"]) # distance to the node being explored
                         item[key]["costToNode"] = item[key][routeOptionString] # cost to node - the routing Option entry updated for the node being explored
 			g = calc_heuristic(key_tokens[1], endCityName) #calculate heuristic function called
 			if g != None: # if a latitude longitude entry is found for the node being explored
-				f = float(item[key]["costToNode"]) + g
+				if routeOptionString == "distance" or routeOptionString == "scenic" or routeOptionString == "segments":
+					f = float(item[key]["costToNode"]) + g
+				elif routeOptionString == "time":
+					f = float(item[key]["costToNode"]) + float(g/80)
+
                                 heapq.heappush(fringe, (f,item)) #pushing in the fringe
 			else:#if no latitude longitude entry is found for the node being  explored - meaning it is a highway intersection
 				highway_neighbor_tuple = find_neighbor_closest_to_goal(key_tokens[1], key_tokens[0])
-				print "\nhighway neighbor tuple entry",highway_neighbor_tuple[1]
 				if highway_neighbor_tuple != None:#if the neighbor of the highway intersection is not another highway intersection
-					'''Updating entries for the neighbor entry found for the highway intersection'''
+			 		'''Updating entries for the neighbor entry found for the highway intersection'''
 					road_segments[highway_neighbor_tuple[2]]["pathToNode"] = item[key]["pathToNode"]+"|"+highway_neighbor_tuple[3]
 					road_segments[highway_neighbor_tuple[2]]["costToNode"] = float(item[key]["costToNode"])+float(highway_neighbor_tuple[0])
 					road_segments[highway_neighbor_tuple[2]]["distToNode"] = float(item[key]["distToNode"])+\
@@ -127,7 +151,7 @@ def is_goal(s, endCityName):
     keySplitList = key.split('|')
     '''Checking to see if the node is a goal node '''
     if keySplitList[1] == endCityName:
-        s[key]["pathToNode"] = s[key]["pathToNode"] + "|"+endCityName
+        s[key]["pathToNode"] = s[key]["pathToNode"]
         return True
     
     return False
@@ -169,18 +193,22 @@ def successors(dict):
         if childKeySplitList[0] == parentKeySplitList[1] and childKeySplitList[1] not in pathList:
             	child_item = {child_key:child_value}
             	child_item[child_key]["pathToNode"] = parent_path+ "|"+childKeySplitList[1]
-            	child_item[child_key]["costToNode"] = float(dict[parent_key]["costToNode"]) +  float(child_item[child_key][routeOptionString]) 
 		child_item[child_key]["distToNode"] = float(dict[parent_key]["distToNode"]) +  float(child_item[child_key]["distance"])
-		child_item[child_key]["timeToNode"] = float(dict[parent_key]["timeToNode"]) +  float(child_item[child_key]["travelTime"])	
+		child_item[child_key]["timeToNode"] = float(dict[parent_key]["timeToNode"]) +  float(child_item[child_key]["time"])
+	        child_item[child_key]["segments"] = float(dict[parent_key]["segments"]) +  float(child_item[child_key]["segments"])
+		child_item[child_key]["costToNode"] = float(dict[parent_key]["costToNode"]) +  float(child_item[child_key][routeOptionString])
 		#checking against normal costToNode values in case of bfs, dfs and idfs
-		if "bfs" in routingAlgorithm or "dfs" in routingAlgorithm or "idfs" in routingAlgorithm:
+		if "bfs" in routingAlgorithm or "dfs" in routingAlgorithm or "ids" in routingAlgorithm:
 			if(child_item[child_key]["costToNode"]< goal_cost): 
         #if it does not have a value greater than the minimum goal cost so far it is added to the list being returned
 				ret.append({child_key:child_value})
 		elif "astar" in routingAlgorithm: #checking against f(s) values for nodes in case of astar
 			latLongDistance = calc_heuristic(childKeySplitList[0],endCityName)
 			if latLongDistance != None:
-				heuristic = child_item[child_key]["costToNode"] + latLongDistance
+				if routeOptionString == "distance" or routeOptionString == "scenic" or routeOptionString == "segments":
+					heuristic = child_item[child_key]["costToNode"] + float(latLongDistance)
+				elif routeOptionString == "time":
+					heuristic = child_item[child_key]["costToNode"] + float(latLongDistance/80)
 			else:
 				heuristic = child_item[child_key]["costToNode"]  
 			if heuristic < goal_cost: 
@@ -192,14 +220,17 @@ def successors(dict):
 '''
 Function to implement Depth First Search
 '''
-def dfs():
-    
+def dfs(depth):
+    #print "starting dfs"
     fringe = []
     global goal_cost
     global goal_path
     global goal_time
     global goal_dist
     global goal_flag
+#Initializing the road-segments again for iterative depth first search
+    readFiles()
+
 #Initializing the fringe with the first level of successors of the startCity
     for key, value in road_segments.iteritems():   # iter on both keys and values
         key_tokens = key_split(key)
@@ -207,39 +238,54 @@ def dfs():
             item  = {key:value}
             item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
             item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
-            item[key]["timeToNode"] = item[key]["travelTime"]
+            item[key]["timeToNode"] = item[key]["time"]
             item[key]["distToNode"] = item[key]["distance"]
             item[key]["costToNode"] = item[key][routeOptionString]
+            item[key]["segments"] = 2
   
             fringe.append(item)
-	curr_depth=1
-	#Extracting from the fringe, finding successors and checking against the goal cost for a minimum #	
-    while len(fringe)>0:
+			
+	
+	#Extracting from the fringe, finding successors and checking the first goal  #	
+    #print fringe
+    while len(fringe)>0 and not goal_flag:
+        #print "fringe\n", fringe
         for s in successors(fringe.pop()):
+	    #print "successor", s
             if is_goal(s,endCityName):
 		keys = list(s.keys())
-		s_key = keys[0]
+	        s_key = keys[0]
 		float_val = float(s[s_key]["costToNode"])
-		if float_val < goal_cost:
-			goal_cost = float(s[s_key]["costToNode"])
-			goal_path = s[s_key]["pathToNode"]
-			goal_time = float(s[s_key]["timeToNode"])
-			goal_dist = float(s[s_key]["distToNode"])
-                        continue
-		curr_depth+=1
+		goal_cost = float(s[s_key]["costToNode"])
+		goal_path = s[s_key]["pathToNode"]
+		goal_time = float(s[s_key]["timeToNode"])
+		goal_dist = float(s[s_key]["distToNode"])
+		goal_flag=1
+                #print "GOAL"
+		break
+
             if s not in fringe:
-                fringe.append(s)
-    goal_flag=1   
+		keys = list(s.keys())
+	        s_key = keys[0]
+		if s[s_key]["segments"]<=depth:
+                    #print s[s_key]["segments"]
+                    fringe.append(s)
+		    
+        
                 
     return False
 '''
 Function to implement Iterative Depth First Search. Levereges DFS iteratively 
 '''
-def idfs():
-    global goal_flag
-    depth=0
+def ids():
+
+    global goal_flag	
+    #print "starting ids"
+    depth=1	
     while(not goal_flag):
-        dfs(depth+1)
+	depth=depth+1
+        dfs(depth)
+	
     
 '''
 Function to implement Breadth First Search
@@ -259,7 +305,7 @@ def bfs():
             item  = {key:value}
             item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
             item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
-	    item[key]["timeToNode"] = item[key]["travelTime"]
+	    item[key]["timeToNode"] = item[key]["time"]
 	    item[key]["distToNode"] = item[key]["distance"]    
             item[key]["costToNode"] = item[key][routeOptionString]	    
 	    fringe.append(item)
@@ -300,7 +346,7 @@ def get_driving_directions(startCity,endCity,routingOption,routingAlgorithm):
     if "bfs" in routingAlgorithm:
             bfs()
     if "dfs" in routingAlgorithm:
-            dfs()
+            dfs(9999)
     if "ids" in routingAlgorithm:
             ids()
     if "astar" in routingAlgorithm:
@@ -322,13 +368,13 @@ def readFiles():
         for line in fin:
             lineSplit = line.split()
             if len(lineSplit) == 5 and int(lineSplit[2]) and int(lineSplit[3]):
-                road_segments.update({lineSplit[0]+"|"+lineSplit[1]+"|"+lineSplit[4]:{"distance": lineSplit[2], "speed": lineSplit[3],\
-                    "scenic":lineSplit[2] if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,\
-			"timeToNode" : 0.0,"distToNode":0.0, "segments":1}}); 
+		road_segments.update({lineSplit[0]+"|"+lineSplit[1]+"|"+lineSplit[4]:{"distance": lineSplit[2], "speed": lineSplit[3],\
+                    "scenic":lineSplit[2] if lineSplit[3] <=55 else 0, "time": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,\
+			"timeToNode" : 0.0,"distToNode":0.0, "segments":1}}) 
                 road_segments.update({lineSplit[1]+"|"+lineSplit[0]+"|"+lineSplit[4]:{"distance": lineSplit[2], "speed": lineSplit[3],\
-                    "scenic":lineSplit[2] if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,
-			"timeToNode":0.0, "distToNode":0.0, "segments":1}});
-            
+                    "scenic":lineSplit[2] if lineSplit[3] <=55 else 0, "time": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,
+			"timeToNode":0.0, "distToNode":0.0, "segments":1}})
+
 #read Text Files     
 readFiles()
 #Reac program run arguments
@@ -338,8 +384,7 @@ routingOption=sys.argv[3]
 routingAlgorithm=sys.argv[4]
 if startCity != endCity:
 	get_driving_directions(startCity,endCity,routingOption,routingAlgorithm)
-	print "\nLatLong Distance between Source and Destination is - ",calc_heuristic(startCityName, endCityName), "miles\n"
-	print "\n[total-distance-in-miles:", goal_dist, "] [total-time-in-hours:", goal_time,"] ", goal_path
+	print_solution()
 else: 
 	print "\nStart City and End City are same ! Re-run the program with different set of arguments\n"
 
