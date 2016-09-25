@@ -70,10 +70,10 @@ def astar():
 			item  = {key:value}
 			item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
 			item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
-			item[key]["costToNode"] = item[key][routeOptionString]    
 			item[key]["timeToNode"] = item[key]["travelTime"]
                         item[key]["distToNode"] = float(item[key]["distance"])
-                        g = calc_heuristic(key_tokens[1], endCityName)
+                        item[key]["costToNode"] = item[key][routeOptionString]
+			g = calc_heuristic(key_tokens[1], endCityName)
 			if g != None:
 				f = float(item[key]["costToNode"])+g
                                 heapq.heappush(fringe, (f,item))
@@ -185,9 +185,9 @@ def dfs():
             item  = {key:value}
             item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
             item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
-            item[key]["costToNode"] = item[key][routeOptionString]
             item[key]["timeToNode"] = item[key]["travelTime"]
             item[key]["distToNode"] = item[key]["distance"]
+            item[key]["costToNode"] = item[key][routeOptionString]
   
             fringe.append(item)
 	curr_depth=1
@@ -235,10 +235,10 @@ def bfs():
             item  = {key:value}
             item[key]["pathToNode"] = item[key]["pathToNode"] + "|"+startCityName
             item[key]["pathToNode"] = item[key]["pathToNode"]+"|"+key_tokens[1]
-            item[key]["costToNode"] = item[key][routeOptionString]
 	    item[key]["timeToNode"] = item[key]["travelTime"]
 	    item[key]["distToNode"] = item[key]["distance"]    
-            fringe.append(item)
+            item[key]["costToNode"] = item[key][routeOptionString]	    
+	    fringe.append(item)
 
     while len(fringe) > 0:
            for s in successors( fringe.pop(0)):
@@ -297,11 +297,11 @@ def readFiles():
             lineSplit = line.split()
             if len(lineSplit) == 5 and int(lineSplit[2]) and int(lineSplit[3]):
                 road_segments.update({lineSplit[0]+"|"+lineSplit[1]+"|"+lineSplit[4]:{"distance": lineSplit[2], "speed": lineSplit[3],\
-                    "isHighway":1 if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,\
-			"timeToNode" : 0.0,"distToNode":0.0}}); 
+                    "scenic":lineSplit[2] if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,\
+			"timeToNode" : 0.0,"distToNode":0.0, "segments":1}}); 
                 road_segments.update({lineSplit[1]+"|"+lineSplit[0]+"|"+lineSplit[4]:{"distance": lineSplit[2], "speed": lineSplit[3],\
-                    "isHighway":1 if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,
-			"timeToNode":0.0, "distToNode":0.0}});
+                    "scenic":lineSplit[2] if lineSplit[3] >=55 else 0, "travelTime": float(lineSplit[2])/float(lineSplit[3]), "pathToNode":"", "costToNode":0,
+			"timeToNode":0.0, "distToNode":0.0, "segments":1}});
             
 #read Text Files     
 readFiles()
