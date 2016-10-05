@@ -1,4 +1,8 @@
-# ppreeti-abalaga-singhgag-a1 (References in References Folder, Report on master branch )
+# Assignment 1 - Artificial Intelligence 
+
+N-queens, Google-Maps-Search and modified 15 tile puzzle – These projects were developed as a part of the class in Artificial Intelligence, where the aim was to implement searching techniques  - BFS, DFS, IDS, and A-Star (Technologies Used: Python) 
+
+ppreeti-abalaga-singhgag-a1 (References in References Folder, Report on master branch )
 
 
 Problem 1 steps to run - 
